@@ -8,12 +8,12 @@ export class TodoController {
     constructor(private readonly todoService: TodoService) { }
 
     async getAllTodos(): Promise<Todo[]> {
-        return this.todoService.getAllTodos();
+        return await this.todoService.getAllTodos();
     }
 
     @Get('/:id')
     async getTodoById(@Param("id") id: string): Promise<Todo> {
-        return this.todoService.getTodoById(id);
+        return await this.todoService.getTodoById(id);
     }
 
     @Post("create")
@@ -23,7 +23,7 @@ export class TodoController {
             description: body.description,
             done: false
         } as Todo;
-        return this.todoService.createTodo(todo);
+        return await this.todoService.createTodo(todo);
     }
 
     @Put("update/:id")
@@ -33,12 +33,13 @@ export class TodoController {
             description: body.description,
             done: body.done
         } as Todo;
-        return this.todoService.updateTodo(id, todo);
+        return await this.todoService.updateTodo(id, todo);
     }
 
     @Delete('delete/:id')
-    async deleteTodo(@Param("id") id: string): Promise<Todo> {
-        return this.deleteTodo(id);
+    async deleteTodo(@Param("id") id: string) {
+        await this.todoService.deleteTodo(id);
+        return {message:"task deleted"}
     }
 
 }
