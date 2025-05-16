@@ -14,19 +14,19 @@ export class TodoService {
     }
 
     async getAllTodos(): Promise<Todo[]> {
-        return this.todoModel.find().exec();
+        return await this.todoModel.find().exec();
     }
 
     async getTodoById(id: string): Promise<Todo> {
-        return this.todoModel.findById(id).exec();
+        return await this.todoModel.findById(id).exec();
     }
 
     async updateTodo(id: string, todo: Partial<Todo>): Promise<Todo> {
-        return this.todoModel.findByIdAndUpdate(id, todo, { new: true }).exec();
+        return await this.todoModel.findByIdAndUpdate(id, todo, { new: true }).exec();
     }
 
     async deleteTodo(id: string): Promise<Todo> {
-        return this.todoModel.findByIdAndDelete(id).exec();
+        return await this.todoModel.findByIdAndDelete(id).exec();
     }
 
 }
