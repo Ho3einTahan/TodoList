@@ -7,6 +7,7 @@ export class TodoController {
 
     constructor(private readonly todoService: TodoService) { }
 
+    @Get("/all")
     async getAllTodos(): Promise<Todo[]> {
         return await this.todoService.getAllTodos();
     }
@@ -39,7 +40,7 @@ export class TodoController {
     @Delete('delete/:id')
     async deleteTodo(@Param("id") id: string) {
         await this.todoService.deleteTodo(id);
-        return {message:"task deleted"}
+        return { message: "task deleted" }
     }
 
 }
