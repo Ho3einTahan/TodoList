@@ -21,7 +21,6 @@ export class TodoController {
     async createTodo(@Body() body): Promise<Todo> {
         const todo = {
             title: body.title,
-            description: body.description,
             done: false
         } as Todo;
         return await this.todoService.createTodo(todo);
@@ -29,9 +28,10 @@ export class TodoController {
 
     @Put("update/:id")
     async updateTodo(@Param("id") id: string, @Body() body): Promise<Todo> {
+        console.log(id);
+        console.log(body);
         const todo = {
             title: body.title,
-            description: body.description,
             done: body.done
         } as Todo;
         return await this.todoService.updateTodo(id, todo);
