@@ -8,9 +8,6 @@ export class Todo {
   @Prop({ required: true })
   title: string;
 
-  @Prop()
-  description?: string;
-
   @Prop({ default: false })
   done: boolean;
 }
