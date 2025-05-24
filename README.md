@@ -26,4 +26,5 @@ npm run start
 ```
 
 🙏 Thanks for using this tool!
+<br>
 © 2025 — All rights reserved. Developed with ❤️ by Ho3ein Tahan
