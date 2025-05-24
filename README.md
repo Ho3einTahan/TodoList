@@ -19,7 +19,16 @@ git clone https://github.com/Ho3einTahan/TodoList
 cd TodoList
 ```
 
-2. Start the Server:
+2. Make sure MongoDB is installed and running locally.
+
+3. Configure Database
+
+#### Update the `MongooseModule` connection in app.module.ts:
+``` javascript
+    MongooseModule.forRoot('mongodb://localhost:27017/todo-app'),
+```
+
+3. Install Dependencies and Start the Server
 ``` javascript
 npm install
 npm run start
