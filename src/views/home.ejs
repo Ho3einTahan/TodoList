@@ -247,7 +247,6 @@
             
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
                 <button class="filter-btn" data-filter="completed">Completed</button>
                 <button class="btn btn-danger" id="clear-completed">Clear Completed</button>
             </div>
@@ -275,12 +274,11 @@
             const filterButtons = document.querySelectorAll('.filter-btn');
             
             // Todo array
-            let todos = JSON.parse(localStorage.getItem('todos')) || [];
+            let todos =[];
             let currentFilter = 'all';
             
             // Initialize the app
             renderTodos();
-            updateStats();
             
             // Event Listeners
             addBtn.addEventListener('click', addTodo);
@@ -300,29 +298,37 @@
             });
             
             // Functions
-            function addTodo() {
+           async function addTodo() {
                 const text = todoInput.value.trim();
                 if (text) {
-                    const newTodo = {
-                        id: Date.now(),
-                        text,
-                        completed: false
-                    };
-                    todos.push(newTodo);
-                    saveTodos();
+                    
+                await fetch("/todo/create",({
+                    method:"POST",
+                    headers: { "Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        title : text
+                    }),
+                })).then(async (response)=>{})
                     todoInput.value = '';
                     renderTodos();
-                    updateStats();
                 }
             }
             
-            function renderTodos() {
-                todoList.innerHTML = '';
-                
+           async function renderTodos() {
+               todoList.innerHTML = '';
+               
+               await fetch("/todo/all",({
+                })).then(async (response)=>{
+                if (response.ok) {
+                 return response.json();
+                }
+                }).then((html)=>{
+                    todos=html;
+                });
+
                 const filteredTodos = todos.filter(todo => {
                     if (currentFilter === 'all') return true;
-                    if (currentFilter === 'active') return !todo.completed;
-                    if (currentFilter === 'completed') return todo.completed;
+                    if (currentFilter === 'completed') return todo.done;
                 });
                 
                 if (filteredTodos.length === 0) {
@@ -336,13 +342,14 @@
                 }
                 
                 filteredTodos.forEach(todo => {
+                    console.log(todo);
                     const todoItem = document.createElement('li');
-                    todoItem.className = `todo-item ${todo.completed ? 'completed' : ''}`;
-                    todoItem.dataset.id = todo.id;
+                    todoItem.className = `todo-item ${todo.done ? 'completed' : ''}`;
+                    todoItem.dataset.id = todo._id;
                     
                     todoItem.innerHTML = `
-                        <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
-                        <span class="todo-text">${todo.text}</span>
+                        <input type="checkbox" class="todo-checkbox" ${todo.done ? 'checked' : ''}>
+                        <span class="todo-text">${todo.title}</span>
                         <div class="todo-actions">
                             <button class="action-btn edit-btn">✏️</button>
                             <button class="action-btn delete-btn">🗑️</button>
@@ -353,29 +360,42 @@
                     const editBtn = todoItem.querySelector('.edit-btn');
                     const deleteBtn = todoItem.querySelector('.delete-btn');
                     const todoText = todoItem.querySelector('.todo-text');
-                    
-                    checkbox.addEventListener('change', () => toggleTodoComplete(todo.id));
-                    deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
-                    editBtn.addEventListener('click', () => editTodo(todo.id, todoText));
+
+                    checkbox.addEventListener('change', () => toggleTodo(todo._id,checkbox.checked));
+                    deleteBtn.addEventListener('click', () => deleteTodo(todo._id));
+                    editBtn.addEventListener('click', () => editTodo(todo._id, todoText));
                     
                     todoList.appendChild(todoItem);
+
+                    updateStats();
+                    
                 });
             }
             
-            function toggleTodoComplete(id) {
-                todos = todos.map(todo => 
-                    todo.id === id ? {...todo, completed: !todo.completed} : todo
-                );
-                saveTodos();
+            async function deleteTodo(id) {
+                await fetch(`/todo/delete/${id}`,{
+                        method:'DELETE'
+                        }).then((response)=>{
+                            if(response.status){
+                                return response.json();
+                            }
+                });
                 renderTodos();
-                updateStats();
             }
-            
-            function deleteTodo(id) {
-                todos = todos.filter(todo => todo.id !== id);
-                saveTodos();
+          
+            async function toggleTodo(id,completed){
+                await fetch(`/todo/update/${id}`,{
+                        method:'PUT',
+                        headers: { "Content-Type": "application/json"},
+                        body: JSON.stringify({
+                         done:completed,
+                        }),
+                        }).then((response)=>{
+                            if(response.status){
+                                return response.json();
+                            }
+                        });
                 renderTodos();
-                updateStats();
             }
             
             function editTodo(id, todoTextElement) {
@@ -392,41 +412,49 @@
                 todoTextElement.replaceWith(input);
                 input.focus();
                 
-                function saveEdit() {
+                async function saveEdit() {
                     const newText = input.value.trim();
                     if (newText) {
-                        todos = todos.map(todo => 
-                            todo.id === id ? {...todo, text: newText} : todo
-                        );
-                        saveTodos();
-                    }
+
+                        await fetch(`/todo/update/${id}`,{
+                        method:'PUT',
+                        headers: { "Content-Type": "application/json"},
+                        body: JSON.stringify({
+                         title : newText,
+                        }),
+                        }).then((response)=>{
+                            if(response.status){
+                                return response.json();
+                            }
+                        });
                     renderTodos();
+                    }
                 }
                 
                 input.addEventListener('blur', saveEdit);
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') saveEdit();
                 });
+
             }
-            
+                
             function clearCompletedTodos() {
-                todos = todos.filter(todo => !todo.completed);
-                saveTodos();
+                todos = todos.filter(async todo=>{
+                    if(todo.done){
+                       deleteTodo(todo._id)
+                    }
+                });
                 renderTodos();
-                updateStats();
             }
             
             function updateStats() {
                 const total = todos.length;
-                const remaining = todos.filter(todo => !todo.completed).length;
+                const remaining = todos.filter(todo => !todo.done).length;
                 
                 totalCount.textContent = `${total} task${total !== 1 ? 's' : ''} total`;
                 remainingCount.textContent = `${remaining} task${remaining !== 1 ? 's' : ''} remaining`;
             }
-            
-            function saveTodos() {
-                localStorage.setItem('todos', JSON.stringify(todos));
-            }
+        
         });
     </script>
 </body>
